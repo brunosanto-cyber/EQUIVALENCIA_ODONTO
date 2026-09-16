@@ -17,8 +17,8 @@ document.getElementById('form-equiparacao').addEventListener('submit', async fun
     resultadoDiv.classList.add('hidden');
 
     try {
-        // ATENÇÃO: SUBSTITUA A URL ABAIXO PELA URL DA SUA VERCEL
-        const URL_DA_VERCEL = "https://SEU-PROJETO-AQUI.vercel.app/api/comparar";
+        // AQUI ESTÁ O SEU LINK CORRETO DA VERCEL!
+        const URL_DA_VERCEL = "https://equivalencia-odonto.vercel.app/api/comparar";
         
         const resposta = await fetch(URL_DA_VERCEL, {
             method: 'POST',
@@ -47,18 +47,22 @@ document.getElementById('form-equiparacao').addEventListener('submit', async fun
         listaDiferentes.innerHTML = '';
 
         // Preenche a lista de coberturas iguais
-        dados.coberturas_iguais.forEach(item => {
-            const li = document.createElement('li');
-            li.innerText = item;
-            listaIguais.appendChild(li);
-        });
+        if (dados.coberturas_iguais) {
+            dados.coberturas_iguais.forEach(item => {
+                const li = document.createElement('li');
+                li.innerText = item;
+                listaIguais.appendChild(li);
+            });
+        }
 
         // Preenche a lista de coberturas diferentes
-        dados.coberturas_diferentes.forEach(item => {
-            const li = document.createElement('li');
-            li.innerText = item;
-            listaDiferentes.appendChild(li);
-        });
+        if (dados.coberturas_diferentes) {
+            dados.coberturas_diferentes.forEach(item => {
+                const li = document.createElement('li');
+                li.innerText = item;
+                listaDiferentes.appendChild(li);
+            });
+        }
 
         // 6. Mostra o resultado final com as cores da Unimed
         resultadoDiv.classList.remove('hidden');
