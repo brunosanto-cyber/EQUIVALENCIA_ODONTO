@@ -1,17 +1,15 @@
 export default async function handler(req, res) {
-  // 1. Configuração de CORS (Libera o acesso do seu GitHub Pages)
+  // 1. Configuração de CORS
   res.setHeader('Access-Control-Allow-Credentials', true);
   res.setHeader('Access-Control-Allow-Origin', '*'); 
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
   res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version');
 
-  // 2. Responde à requisição de pré-verificação (Preflight)
   if (req.method === 'OPTIONS') {
     res.status(200).end();
     return;
   }
 
-  // 3. Bloqueia requisições que não sejam POST
   if (req.method !== 'POST') {
     return res.status(405).json({ erro: 'Método não permitido.' });
   }
@@ -22,18 +20,30 @@ export default async function handler(req, res) {
     return res.status(400).json({ erro: 'Preencha todos os campos.' });
   }
 
-  // 4. Prompt Estruturado
+  // 4. Prompt Estruturado (Treinado com os Planos Oficiais)
   const promptEspecialista = `
     Você é um especialista em planos odontológicos no Brasil. 
     Sua tarefa é analisar o plano "${plano}" da operadora "${operadora}" (Modalidade: ${modelo}) 
-    e compará-lo com o portfólio de planos da Unimed Odonto (ex: Essencial, Pleno, Prumo, Prático, etc).
+    e encontrar a melhor equivalência comercial e de coberturas na Unimed Odonto.
     
-    Identifique qual é o plano da Unimed Odonto que mais se aproxima ou equipara ao plano concorrente informado.
+    ATENÇÃO: Os ÚNICOS planos disponíveis na Unimed Odonto são estes abaixo:
+    - Essencial
+    - Essencial Plus
+    - Essencial Plus DOC
+    - Pleno
+    - Pleno Plus
+    - Pleno Plus DOC
+    - Pleno Orto
+    - Pleno Top
+    - Plano Alinhador
+    
+    Identifique qual DESSES PLANOS ACIMA mais se aproxima ou equipara ao plano concorrente informado.
+    NÃO invente nomes de planos, escolha estritamente um da lista.
     
     Retorne a sua resposta ÚNICA E EXCLUSIVAMENTE no formato JSON abaixo, sem textos adicionais antes ou depois:
     {
       "plano_concorrente": "${plano}",
-      "plano_unimed": "Nome do Plano Unimed Equivalente",
+      "plano_unimed": "Coloque aqui APENAS o nome de um dos planos da lista",
       "percentual_equiparacao": 85, 
       "coberturas_iguais": ["cobertura 1", "cobertura 2", "cobertura 3"],
       "coberturas_diferentes": ["cobertura A (Concorrente tem, Unimed não)", "cobertura B (Unimed tem, Concorrente não)"],
@@ -50,7 +60,7 @@ export default async function handler(req, res) {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        "model": "openrouter/free", // <- ROTEADOR CURINGA GRATUITO
+        "model": "openrouter/free", 
         "messages": [
           { "role": "user", "content": promptEspecialista }
         ],
@@ -60,7 +70,6 @@ export default async function handler(req, res) {
 
     const data = await response.json();
 
-    // Captura de erro para facilitar qualquer depuração futura
     if (data.error) {
       console.error("MOTIVO DO ERRO NO OPENROUTER:", data.error);
       return res.status(500).json({ erro: 'Bloqueio na IA: ' + data.error.message });
@@ -70,7 +79,6 @@ export default async function handler(req, res) {
     let textoResposta = data.choices[0].message.content;
     textoResposta = textoResposta.replace(/```json/gi, '').replace(/```/gi, '').trim();
     
-    // Tratamento extra caso a IA insira algum texto antes ou depois das chaves do JSON
     const jsonInicio = textoResposta.indexOf('{');
     const jsonFim = textoResposta.lastIndexOf('}') + 1;
     if (jsonInicio !== -1 && jsonFim !== -1) {
