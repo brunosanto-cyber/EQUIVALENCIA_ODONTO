@@ -5,7 +5,7 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
   res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version');
 
-  // 2. Responde rapidamente à requisição de pré-verificação (Preflight) do navegador
+  // 2. Responde à requisição de pré-verificação (Preflight)
   if (req.method === 'OPTIONS') {
     res.status(200).end();
     return;
@@ -22,7 +22,7 @@ export default async function handler(req, res) {
     return res.status(400).json({ erro: 'Preencha todos os campos.' });
   }
 
-  // 4. O Prompt Estruturado
+  // 4. Prompt Estruturado
   const promptEspecialista = `
     Você é um especialista em planos odontológicos no Brasil. 
     Sua tarefa é analisar o plano "${plano}" da operadora "${operadora}" (Modalidade: ${modelo}) 
@@ -42,7 +42,7 @@ export default async function handler(req, res) {
   `;
 
   try {
-    // 5. Chamada para a IA
+    // 5. Chamada para o OpenRouter usando o modelo Gemini atualizado
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -50,7 +50,7 @@ export default async function handler(req, res) {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        "model": "google/gemini-1.5-flash",
+        "model": "google/gemini-2.0-flash-001",
         "messages": [
           { "role": "user", "content": promptEspecialista }
         ],
@@ -60,13 +60,13 @@ export default async function handler(req, res) {
 
     const data = await response.json();
 
-    // 🚨 NOVA TRAVA DE SEGURANÇA 🚨
+    // Trava de segurança para capturar respostas de erro do OpenRouter
     if (data.error) {
       console.error("MOTIVO DO ERRO NO OPENROUTER:", data.error);
       return res.status(500).json({ erro: 'Bloqueio na IA: ' + data.error.message });
     }
 
-    // 6. Tratamento da Resposta
+    // 6. Tratamento da resposta para converter em JSON limpo
     let textoResposta = data.choices[0].message.content;
     textoResposta = textoResposta.replace(/```json/g, '').replace(/```/g, '').trim();
     
