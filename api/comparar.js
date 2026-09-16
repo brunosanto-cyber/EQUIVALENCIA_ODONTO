@@ -42,7 +42,7 @@ export default async function handler(req, res) {
   `;
 
   try {
-    // 5. Chamada ao OpenRouter com modelo Gratuito e Estável
+    // 5. Chamada ao Roteador Gratuito Permanente do OpenRouter
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -50,7 +50,7 @@ export default async function handler(req, res) {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        "model": "meta-llama/llama-3.3-70b-instruct:free",
+        "model": "openrouter/free", // <- ROTEADOR CURINGA GRATUITO
         "messages": [
           { "role": "user", "content": promptEspecialista }
         ],
@@ -60,15 +60,22 @@ export default async function handler(req, res) {
 
     const data = await response.json();
 
-    // Captura erros retornado pelo OpenRouter
+    // Captura de erro para facilitar qualquer depuração futura
     if (data.error) {
       console.error("MOTIVO DO ERRO NO OPENROUTER:", data.error);
       return res.status(500).json({ erro: 'Bloqueio na IA: ' + data.error.message });
     }
 
-    // 6. Tratamento da resposta para converter em JSON limpo
+    // 6. Tratamento da resposta para converter em JSON limpo e seguro
     let textoResposta = data.choices[0].message.content;
     textoResposta = textoResposta.replace(/```json/gi, '').replace(/```/gi, '').trim();
+    
+    // Tratamento extra caso a IA insira algum texto antes ou depois das chaves do JSON
+    const jsonInicio = textoResposta.indexOf('{');
+    const jsonFim = textoResposta.lastIndexOf('}') + 1;
+    if (jsonInicio !== -1 && jsonFim !== -1) {
+        textoResposta = textoResposta.substring(jsonInicio, jsonFim);
+    }
     
     const analiseJSON = JSON.parse(textoResposta);
     res.status(200).json(analiseJSON);
