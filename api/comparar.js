@@ -1,5 +1,5 @@
 export default async function handler(req, res) {
-  // 1. Configuração de CORS
+  // 1. Configuração de CORS (Libera o acesso do GitHub Pages)
   res.setHeader('Access-Control-Allow-Credentials', true);
   res.setHeader('Access-Control-Allow-Origin', '*'); 
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
@@ -39,7 +39,7 @@ export default async function handler(req, res) {
   `;
 
   try {
-    // 2. Chamada usando modelo estável garantido no OpenRouter
+    // 2. Chamada com Fallback Automático: tenta Llama 3.3 (gratuito) e modelos Gemini ativos
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -47,7 +47,11 @@ export default async function handler(req, res) {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        "model": "google/gemini-flash-1.5-8b",
+        "models": [
+          "meta-llama/llama-3.3-70b-instruct:free",
+          "google/gemini-2.0-flash-lite-preview-02-05:free",
+          "google/gemini-2.0-flash-001"
+        ],
         "messages": [
           { "role": "user", "content": promptEspecialista }
         ],
