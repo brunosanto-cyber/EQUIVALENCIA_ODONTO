@@ -42,7 +42,7 @@ export default async function handler(req, res) {
   `;
 
   try {
-    // 5. Chamada para o OpenRouter com o ID válido e ativo
+    // 5. Chamada ao OpenRouter usando a chave com modelo gratuito e ativo
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -50,7 +50,7 @@ export default async function handler(req, res) {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        "model": "google/gemini-flash-1.5",
+        "model": "google/gemini-2.0-flash-exp:free",
         "messages": [
           { "role": "user", "content": promptEspecialista }
         ],
@@ -60,13 +60,13 @@ export default async function handler(req, res) {
 
     const data = await response.json();
 
-    // Trava de segurança para capturar erros do OpenRouter
+    // Captura erros retornado pelo OpenRouter
     if (data.error) {
       console.error("MOTIVO DO ERRO NO OPENROUTER:", data.error);
       return res.status(500).json({ erro: 'Bloqueio na IA: ' + data.error.message });
     }
 
-    // 6. Tratamento da resposta para converter em JSON limpo
+    // 6. Tratamento de resposta
     let textoResposta = data.choices[0].message.content;
     textoResposta = textoResposta.replace(/```json/g, '').replace(/```/g, '').trim();
     
