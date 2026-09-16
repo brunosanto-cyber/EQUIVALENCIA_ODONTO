@@ -1,15 +1,17 @@
 export default async function handler(req, res) {
-  // 1. Configuração de CORS (Libera o acesso do GitHub Pages)
+  // 1. Configuração de CORS (Libera o acesso do seu GitHub Pages)
   res.setHeader('Access-Control-Allow-Credentials', true);
   res.setHeader('Access-Control-Allow-Origin', '*'); 
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
   res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version');
 
+  // 2. Responde à requisição de pré-verificação (Preflight)
   if (req.method === 'OPTIONS') {
     res.status(200).end();
     return;
   }
 
+  // 3. Bloqueia requisições que não sejam POST
   if (req.method !== 'POST') {
     return res.status(405).json({ erro: 'Método não permitido.' });
   }
@@ -20,6 +22,7 @@ export default async function handler(req, res) {
     return res.status(400).json({ erro: 'Preencha todos os campos.' });
   }
 
+  // 4. Prompt Estruturado
   const promptEspecialista = `
     Você é um especialista em planos odontológicos no Brasil. 
     Sua tarefa é analisar o plano "${plano}" da operadora "${operadora}" (Modalidade: ${modelo}) 
@@ -39,7 +42,7 @@ export default async function handler(req, res) {
   `;
 
   try {
-    // 2. Chamada com Fallback Automático: tenta Llama 3.3 (gratuito) e modelos Gemini ativos
+    // 5. Chamada ao OpenRouter com modelo Gratuito e Estável
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -47,11 +50,7 @@ export default async function handler(req, res) {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        "models": [
-          "meta-llama/llama-3.3-70b-instruct:free",
-          "google/gemini-2.0-flash-lite-preview-02-05:free",
-          "google/gemini-2.0-flash-001"
-        ],
+        "model": "meta-llama/llama-3.3-70b-instruct:free",
         "messages": [
           { "role": "user", "content": promptEspecialista }
         ],
@@ -61,11 +60,13 @@ export default async function handler(req, res) {
 
     const data = await response.json();
 
+    // Captura erros retornado pelo OpenRouter
     if (data.error) {
       console.error("MOTIVO DO ERRO NO OPENROUTER:", data.error);
       return res.status(500).json({ erro: 'Bloqueio na IA: ' + data.error.message });
     }
 
+    // 6. Tratamento da resposta para converter em JSON limpo
     let textoResposta = data.choices[0].message.content;
     textoResposta = textoResposta.replace(/```json/gi, '').replace(/```/gi, '').trim();
     
