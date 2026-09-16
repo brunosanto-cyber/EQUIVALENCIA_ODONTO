@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Equiparação - Unimed Odonto</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Fontes do Google -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header>
+        <div class="logo">Unimed <span>Odonto</span></div>
+        <h1>Simulador de Equiparação Comercial</h1>
+    </header>
+
+    <main>
+        <section class="form-card">
+            <h2>Dados da Congênere</h2>
+            <form id="form-equiparacao">
+                <div class="input-group">
+                    <label for="operadora">Operadora Concorrente</label>
+                    <input type="text" id="operadora" placeholder="Ex: Amil Dental, OdontoPrev, SulAmérica..." required>
+                </div>
+
+                <div class="input-group">
+                    <label for="modelo">Modelo de Contratação</label>
+                    <select id="modelo" required>
+                        <option value="" disabled selected>Selecione o modelo...</option>
+                        <option value="Pessoa Física (PF)">Pessoa Física (PF)</option>
+                        <option value="PME / Empresarial">PME / Empresarial</option>
+                        <option value="Coletivo por Adesão">Coletivo por Adesão</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label for="plano">Nome do Plano Concorrente</label>
+                    <input type="text" id="plano" placeholder="Ex: Dental 205, Odonto Ouro..." required>
+                </div>
+
+                <button type="submit" id="btn-submit">Analisar Equiparação</button>
+            </form>
+            <div id="loading" class="hidden">Analisando o mercado com IA... Aguarde.</div>
+        </section>
+
+        <!-- Área de Resultados (Escondida por padrão) -->
+        <section id="resultado" class="resultado-card hidden">
+            <div class="resultado-header">
+                <h3>Equiparação Unimed Odonto</h3>
+                <h2 id="res-plano-unimed">Plano Sugerido</h2>
+            </div>
+
+            <div class="match-container">
+                <div class="match-circle">
+                    <span id="res-percentual">0%</span>
+                </div>
+                <p>de equivalência de coberturas</p>
+            </div>
+
+            <div class="coberturas-grid">
+                <div class="coberturas-box iguais">
+                    <h4>✅ Coberturas Equivalentes</h4>
+                    <ul id="lista-iguais"></ul>
+                </div>
+                <div class="coberturas-box diferentes">
+                    <h4>⚠️ Diferenciais de Cobertura</h4>
+                    <ul id="lista-diferentes"></ul>
+                </div>
+            </div>
+
+            <div class="argumento-vendas">
+                <h4>💡 Argumento Estratégico</h4>
+                <p id="res-argumento"></p>
+            </div>
+        </section>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>
