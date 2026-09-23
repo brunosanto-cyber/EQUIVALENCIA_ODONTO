@@ -20,42 +20,93 @@ export default async function handler(req, res) {
     return res.status(400).json({ erro: 'Preencha todos os campos.' });
   }
 
-  // 4. Prompt Estruturado de Alta Precisão
+  // 2. Base de Conhecimento Mapeada de Operadoras Concorrentes
+  const baseDeReferencias = `
+    === BASE DE REFERÊNCIA DAS OPERADORAS CONCORRENTES ===
+
+    1. ODONTOPREV:
+       - Integral DOC / Dente de Leite / PME Básico / Rol ANS: Equivalente -> "Essencial" ou "Essencial Plus DOC".
+       - Orto / Ortodontia: Equiparações com manutenção ortodôntica -> "Pleno Orto".
+       - Master / Prótese / Prótese Especial: Coberturas ampliadas de pontes/coroas -> "Pleno Top".
+
+    2. DENTAL UNI:
+       - Essencial / Padrão Rol / Class: Rol ANS básico -> "Essencial".
+       - Orto VIP / Ortodontia: Cobre aparelhos e manutenções -> "Pleno Orto".
+       - Elite / Prótese Total: Cobre pontes, coroas e porcelana -> "Pleno Top".
+
+    3. SULAMÉRICA ODONTO:
+       - Odonto Mais / Quali: Rol ANS com extensões simples -> "Essencial Plus".
+       - Odonto Doc: Inclui documentação ortodôntica -> "Essencial Plus DOC".
+       - Odonto Orto: Cobre manutenção de aparelhos -> "Pleno Orto".
+       - Prestige / PME Executivo: Cobre prótese em porcelana/coroas -> "Pleno Top".
+
+    4. AMIL DENTAL:
+       - Dental 200 / 205: Rol ANS estendido -> "Essencial" ou "Essencial Plus".
+       - Dental 205 Orto / Amil Orto: Cobre manutenção de aparelho -> "Pleno Orto".
+       - Dental 300 / K40 / Prótese: Cobre pontes, coroas e próteses completas -> "Pleno Top".
+       - Win / Alinhadores Transparentes: Cobre placas invisíveis -> "Plano Alinhador".
+
+    5. BRADESCO ODONTO:
+       - Ideal / Padrão Rol: Coberturas essenciais ANS -> "Essencial".
+       - Max / Plus: Coberturas com pequenas próteses simples -> "Essencial Plus".
+       - Ortoclass / Orto: Cobre aparelho fixo e manutenções -> "Pleno Orto".
+       - Premium / Prótese: Cobre porcelana, coroas e pontes -> "Pleno Top".
+
+    6. PORTO SEGURO ODONTO:
+       - Odonto Bronze / Prata: Rol ANS básico ou com resina simples -> "Essencial" / "Essencial Plus".
+       - Odonto Cristal / Orto: Cobre documentação e aparelho ortodôntico -> "Pleno Orto".
+       - Odonto Ouro / Ouro Prótese: Cobre pontes e próteses completas -> "Pleno Top".
+
+    7. METLIFE:
+       - First / Gold: Rol ANS básico e emergência -> "Essencial".
+       - Orto / Ortodontia: Cobre documentação, instalação e manutenções -> "Pleno Orto".
+       - Diamond / Prótese: Cobre coroas e reconstruções em porcelana -> "Pleno Top".
+
+    8. HAPVIDA ODONTO (Hapvida / Odonto System):
+       - Mais Odonto / Padrão: Rol ANS básico -> "Essencial".
+       - Hapvida Orto / Aparelho: Cobre manutenção de aparelho -> "Pleno Orto".
+       - Hapvida Premium / Prótese: Cobre próteses e coroas -> "Pleno Top".
+
+    9. INPAO DENTAL:
+       - Linha Standard / Rol ANS: Apenas coberturas básicas da lei -> "Essencial".
+       - Linha Orto / Ortodôntico: Cobre manutenção e documentação -> "Pleno Orto".
+       - Linha Executiva / Master / Prótese: Cobre reconstrução com porcelana/coroas -> "Pleno Top".
+
+    === PORTFÓLIO OFICIAL UNIMED ODONTO DISPONÍVEL ===
+    Apenas estes nomes são permitidos para resposta:
+    - Essencial
+    - Essencial Plus
+    - Essencial Plus DOC
+    - Pleno
+    - Pleno Plus
+    - Pleno Plus DOC
+    - Pleno Orto
+    - Pleno Top
+    - Plano Alinhador
+  `;
+
+  // 3. Prompt de Alta Precisão
   const promptEspecialista = `
-    Você é um Especialista de Produtos e Subscritor Sênior de Planos Odontológicos no Brasil.
-    Sua missão é analisar o plano concorrente "${plano}" da operadora "${operadora}" (Modalidade: ${modelo}) 
-    e mapear a EXATA equivalência para o portfólio da Unimed Odonto.
+    Você é um Especialista Sênior em Produtos e Equiparação de Planos Odontológicos no Brasil.
+    Sua missão é analisar o plano concorrente "${plano}" da operadora "${operadora}" (Modalidade: ${modelo})
+    e definir a EXATA equivalência comercial e técnica no portfólio da Unimed Odonto.
 
-    ⚠️ TABELA DE REFERÊNCIA DE COBERTURAS UNIMED ODONTO ⚠️
-    Use ESTRITAMENTE as regras abaixo para fazer o "match" da equiparação:
+    Utilize estritamente a BASE DE REFERÊNCIA abaixo para fazer o cruzamento dos dados:
+    ${baseDeReferencias}
 
-    1. PLANOS BÁSICOS (Rol ANS - Sem Manutenção Ortodôntica e Prótese Complexa):
-    - "Essencial": Cobre o básico (Limpezas, Cáries, Extrações simples, Gengiva, Odontopediatria e Canal). Equipara com: Amil 200, OdontoPrev Integral, SulAmérica Odonto Mais.
-    - "Essencial Plus": Essencial + Próteses unitárias simples em resina/cerômero.
-    - "Essencial Plus DOC": Essencial Plus + Documentação Ortodôntica (exames e moldes para colocar aparelho, mas não a manutenção).
+    REGRAS DE EXECUÇÃO:
+    1. Se o plano concorrente informado for das operadoras catalogadas acima, siga à risca o mapeamento fornecido.
+    2. Se o concorrente for de outra operadora não catalogada, utilize dedução lógica pelas palavras-chave do nome do plano (ex: "Orto" -> Pleno Orto, "Prótese/Porcelana" -> Pleno Top, "Invisalign/Alinhador" -> Plano Alinhador).
+    3. No campo "plano_unimed", insira EXATAMENTE o nome de um dos 9 planos oficiais listados.
 
-    2. PLANOS INTERMEDIÁRIOS (Próteses Ampliadas):
-    - "Pleno": Cobre Essencial + extensões além do Rol.
-    - "Pleno Plus": Pleno + próteses complementares.
-    - "Pleno Plus DOC": Pleno Plus + Documentação Ortodôntica.
-
-    3. PLANOS ORTODÔNTICOS E PREMIUM:
-    - "Pleno Orto": OBRIGATÓRIO se o concorrente cobrir aparelho. Inclui Ortodontia Completa (Documentação + Instalação + Manutenções Ortodônticas Mensais). Equipara com: Amil 205 Orto, SulAmérica Orto.
-    - "Pleno Top": Cobertura PREMIUM. Inclui Ortodontia Completa + Prótese Completa (Coroas de Porcelana, Dentaduras, Pontes). Equipara com: Amil 300, OdontoPrev Prótese.
-    - "Plano Alinhador": O plano mais avançado. Cobre tudo do Pleno Top + Tratamento estético com Alinhadores Invisíveis.
-
-    REGRAS DE DEDUÇÃO:
-    - Se o nome do plano concorrente sugerir Ortodontia (ex: "Orto", "Aparelho"), a resposta OBRIGATÓRIA deve ser "Pleno Orto" ou superior.
-    - Se sugerir Prótese complexa (ex: "Premium", "Porcelana", "300"), a resposta OBRIGATÓRIA é "Pleno Top".
-    
-    Retorne a sua resposta ÚNICA E EXCLUSIVAMENTE no formato JSON abaixo, sem blocos de código (markdown) e sem textos adicionais:
+    Retorne a sua resposta ÚNICA E EXCLUSIVAMENTE no formato JSON abaixo, sem blocos de código markdown ou texto extra:
     {
       "plano_concorrente": "${plano}",
-      "plano_unimed": "NOME EXATO DE UM DOS PLANOS DA TABELA ACIMA",
-      "percentual_equiparacao": 95, 
+      "plano_unimed": "NOME EXATO DO PLANO UNIMED SELECIONADO",
+      "percentual_equiparacao": 90, 
       "coberturas_iguais": ["cobertura 1", "cobertura 2", "cobertura 3"],
-      "coberturas_diferentes": ["cobertura A (Concorrente tem, Unimed não)", "cobertura B (Unimed tem, Concorrente não)"],
-      "resumo_estrategico": "Seu argumento comercial persuasivo para o vendedor mostrar por que a Unimed Odonto é melhor, focando nos diferenciais do plano Unimed escolhido."
+      "coberturas_diferentes": ["cobertura A (Diferencial Concorrente/Unimed)", "cobertura B (Diferencial Unimed)"],
+      "resumo_estrategico": "Argumento comercial persuasivo destacando os diferenciais da Unimed Odonto e por que o plano selecionado é o melhor substituto."
     }
   `;
 
@@ -71,7 +122,7 @@ export default async function handler(req, res) {
         "messages": [
           { "role": "user", "content": promptEspecialista }
         ],
-        "temperature": 0.1 // Temperatura super baixa (0.1) para que ela seja extremamente fria, lógica e siga a regra à risca.
+        "temperature": 0.1 
       })
     });
 
@@ -82,7 +133,6 @@ export default async function handler(req, res) {
       return res.status(500).json({ erro: 'Bloqueio na IA: ' + data.error.message });
     }
 
-    // Tratamento de segurança da resposta JSON
     let textoResposta = data.choices[0].message.content;
     textoResposta = textoResposta.replace(/```json/gi, '').replace(/```/gi, '').trim();
     
@@ -97,6 +147,6 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error("Erro na API:", error);
-    res.status(500).json({ erro: 'Não foi possível realizar a equiparação no momento. Tente novamente.' });
+    res.status(500).json({ erro: 'Não foi possível realizar a equiparação no momento.' });
   }
 }
